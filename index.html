@@ -1,9 +1,9 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Lock In 120</title>
+<title>Lock In</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Lock In">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
 <style>
@@ -28,12 +28,12 @@ h2{font-size:30px;font-weight:800;text-transform:uppercase;letter-spacing:.02em}
 .phase{font-family:var(--f-display);font-weight:800;font-size:26px;text-transform:uppercase;color:var(--amber);letter-spacing:.04em}
 .mode{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
 canvas#hero{width:100%;height:280px;display:block;border-radius:6px;background:var(--slab)}
-.ticks{display:grid;grid-template-columns:repeat(20,1fr);gap:4px}
-.tick{aspect-ratio:1/1.6;background:var(--steel);border-radius:2px;max-width:100%}
+.ticks{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+.tick{aspect-ratio:2/1;background:var(--steel);border-radius:2px;max-width:100%}
 .tick.done.cut{background:var(--amber)}
 .tick.done.build{background:var(--ice)}
 .tick.today{outline:2px solid var(--bone);outline-offset:1px;animation:pulse 1.6s ease-in-out infinite}
-.tick.split{box-shadow:inset -3px 0 0 var(--night)}
+.tick.gap{margin-top:10px}
 @keyframes pulse{50%{outline-color:transparent}}
 .legend{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:11px;color:var(--muted);margin-top:8px}
 .bar{height:10px;background:var(--steel);border-radius:5px;overflow:hidden;margin-top:14px}
@@ -77,12 +77,12 @@ footer{font-family:var(--f-mono);font-size:11px;color:var(--muted);text-align:ce
 
 <div class="wrap">
   <header>
-    <div class="eyebrow" id="dateline">Operation 120 · Adam</div>
+    <div class="eyebrow" id="dateline">Operation 130 · Adam</div>
     <div class="top">
-      <h1><span id="dayNum">1</span><span class="of">/ 120</span></h1>
+      <h1><span id="dayNum">0</span><span class="of" id="ofTotal">/ 130</span></h1>
       <div style="text-align:right">
-        <div class="phase" id="phaseName">Ignition</div>
-        <div class="mode" id="phaseMode">Phase 1 · Cut</div>
+        <div class="phase" id="phaseName">Standby</div>
+        <div class="mode" id="phaseMode">Starts tomorrow</div>
       </div>
     </div>
   </header>
@@ -91,13 +91,13 @@ footer{font-family:var(--f-mono);font-size:11px;color:var(--muted);text-align:ce
 
   <section>
     <div class="ticks" id="ticks"></div>
-    <div class="legend"><span>Day 1 · 80 kg</span><span>60 · 70 kg</span><span>120 · Built</span></div>
+    <div class="legend" id="legend"></div>
     <div class="bar"><i id="bar"></i></div>
   </section>
 
   <section class="stats">
     <div class="stat"><b id="sTarget">80.0</b><span>Target kg today</span></div>
-    <div class="stat"><b id="sPhaseLeft">60</b><span>Days left in cut</span></div>
+    <div class="stat"><b id="sPhaseLeft">90</b><span id="sPhaseLbl">Days left in cut</span></div>
     <div class="stat"><b id="sPct">0%</b><span>Mission done</span></div>
   </section>
 
@@ -112,7 +112,7 @@ footer{font-family:var(--f-mono);font-size:11px;color:var(--muted);text-align:ce
     <ul class="code why">
       <li><em>2 YRS</em><div><strong>Two years of "tomorrow"</strong>Two years in the same spot, saying I'll start tomorrow. Tomorrow never shows up by itself. Today is the only day I control, so today is the day.</div></li>
       <li><em>5 MIN</em><div><strong>The high doesn't last</strong>Breaking the diet feels good for a few minutes. Then it's gone, and I'm still in the same body with the same regret. The body I'm building stays.</div></li>
-      <li><em>THEM</em><div><strong>What my friends will see</strong>They'll notice either way. The guy who keeps restarting, or the guy who showed up 120 days straight. I decide which one they see.</div></li>
+      <li><em>THEM</em><div><strong>What my friends will see</strong>They'll notice either way. The guy who keeps restarting, or the guy who showed up every single day. I decide which one they see.</div></li>
     </ul>
   </section>
 
@@ -142,7 +142,7 @@ footer{font-family:var(--f-mono);font-size:11px;color:var(--muted);text-align:ce
   </section>
 
   <section>
-    <div class="eyebrow">Start date</div>
+    <div class="eyebrow">Start date (day 1)</div>
     <div class="set">
       <input type="date" id="startDate">
       <button type="button" id="saveStart">Save</button>
@@ -155,16 +155,20 @@ footer{font-family:var(--f-mono);font-size:11px;color:var(--muted);text-align:ce
 
 <script>
 (function(){
-  var DEFAULT_START="2026-10-14";
+  // ---- Plan settings ----
+  var CUT=90, BUILD=40, TOTAL=CUT+BUILD;
+  var START_KG=80, GOAL_KG=70;
+  var DEFAULT_START="2026-10-15";
+
   function sget(k){try{return localStorage.getItem(k)}catch(e){return null}}
   function sset(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
 
   var PHASES=[
     {from:1,to:14,name:"Ignition",n:1,mode:"Cut"},
-    {from:15,to:45,name:"The Grind",n:2,mode:"Cut"},
-    {from:46,to:60,name:"Final Descent",n:3,mode:"Cut"},
-    {from:61,to:90,name:"Build",n:4,mode:"Recomp"},
-    {from:91,to:120,name:"The Reveal",n:5,mode:"Recomp"}
+    {from:15,to:60,name:"The Grind",n:2,mode:"Cut"},
+    {from:61,to:90,name:"Final Descent",n:3,mode:"Cut"},
+    {from:91,to:110,name:"Build",n:4,mode:"Muscle"},
+    {from:111,to:130,name:"The Reveal",n:5,mode:"Muscle"}
   ];
   var QUOTES=[
     "Two years of 'I'll start tomorrow.' This is the tomorrow you kept promising.",
@@ -181,7 +185,7 @@ footer{font-family:var(--f-mono);font-size:11px;color:var(--muted);text-align:ce
     "Be the friend they talk about for showing up, not for starting over.",
     "Same place, same excuse, same body. Not this time.",
     "Short pleasure, long price. You already know how that story ends.",
-    "In 120 days nobody asks if you're disciplined. They can see it."
+    "When this is done, nobody asks if you're disciplined. They can see it."
   ];
   var RULES_CUT=[
     "Hit your protein before you think about anything else.",
@@ -226,44 +230,59 @@ footer{font-family:var(--f-mono);font-size:11px;color:var(--muted);text-align:ce
     "Do you want to be satisfied for five minutes, or for the rest of the year?"
   ];
 
+  document.getElementById("ofTotal").textContent="/ "+TOTAL;
+  document.getElementById("legend").innerHTML="<span>Day 1 · "+START_KG+" kg</span><span>"+CUT+" · "+GOAL_KG+" kg</span><span>"+TOTAL+" · Built</span>";
+
   function parseD(s){var p=(s||"").split("-");if(p.length!==3)return null;var d=new Date(+p[0],+p[1]-1,+p[2]);return isNaN(d)?null:d}
-  var start=sget("li120_start")||DEFAULT_START;
+  var start=sget("li_start")||DEFAULT_START;
   var si=document.getElementById("startDate");si.value=start;
 
   function render(){
     var sd=parseD(start)||parseD(DEFAULT_START);
     var now=new Date();var t=new Date(now.getFullYear(),now.getMonth(),now.getDate());
     var raw=Math.round((t-sd)/86400000)+1;
-    var day=Math.max(1,Math.min(120,raw));
-    var ph=PHASES.filter(function(p){return day>=p.from&&day<=p.to})[0];
-    var cut=day<=60;
-    document.getElementById("dayNum").textContent=raw<1?"0":day;
-    document.getElementById("phaseName").textContent=raw<1?"Standby":(raw>120?"Complete":ph.name);
-    document.getElementById("phaseMode").textContent="Phase "+ph.n+" · "+ph.mode;
-    document.getElementById("dateline").textContent="Operation 120 · Adam · "+t.toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short"});
-    var tgt=cut?(80-10*(day-1)/59):70;
+    var pre=raw<1, over=raw>TOTAL;
+    var day=pre?0:Math.min(TOTAL,raw);
+    var ph=pre?PHASES[0]:PHASES.filter(function(p){return day>=p.from&&day<=p.to})[0];
+    var cut=day<=CUT;
+
+    document.getElementById("dayNum").textContent=day;
+    document.getElementById("phaseName").textContent=pre?"Standby":(over?"Complete":ph.name);
+    var until=1-raw;
+    document.getElementById("phaseMode").textContent=pre?(until===1?"Starts tomorrow":"Starts in "+until+" days"):("Phase "+ph.n+" · "+ph.mode);
+    document.getElementById("dateline").textContent="Operation "+TOTAL+" · Adam · "+t.toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short"});
+
+    var tgt=day<=1?START_KG:(cut?START_KG-(START_KG-GOAL_KG)*(day-1)/(CUT-1):GOAL_KG);
     document.getElementById("sTarget").textContent=tgt.toFixed(1);
-    document.getElementById("sPhaseLeft").textContent=cut?(60-day):(120-day);
-    document.querySelector("#sPhaseLeft + span").textContent=cut?"Days left in cut":"Days to reveal";
-    var pct=Math.round(day/120*100);
+    document.getElementById("sPhaseLeft").textContent=cut?(CUT-day):(TOTAL-day);
+    document.getElementById("sPhaseLbl").textContent=cut?"Days left in cut":"Days to reveal";
+    var pct=Math.round(day/TOTAL*100);
     document.getElementById("sPct").textContent=pct+"%";
     setTimeout(function(){document.getElementById("bar").style.width=pct+"%"},60);
 
     var tk=document.getElementById("ticks");tk.innerHTML="";
-    for(var i=1;i<=120;i++){var e=document.createElement("div");
-      e.className="tick "+(i<=60?"cut":"build")+(i<day||(i===day&&raw>120)?" done":"")+(i===day&&raw>=1&&raw<=120?" today":"")+(i===60?" split":"");
-      tk.appendChild(e)}
+    for(var i=1;i<=TOTAL;i++){var e=document.createElement("div");
+      var cls="tick "+(i<=CUT?"cut":"build");
+      if(over||i<day)cls+=" done";
+      if(!pre&&!over&&i===day)cls+=" today";
+      if(i>CUT&&i<=CUT+10)cls+=" gap";
+      e.className=cls;tk.appendChild(e)}
 
-    document.getElementById("quote").textContent=QUOTES[(day-1)%QUOTES.length];
-    var rules=cut?RULES_CUT:RULES_BUILD;
-    document.getElementById("rule").textContent="Rule of the day: "+rules[(day-1)%rules.length];
+    if(pre){
+      document.getElementById("quote").textContent="Tomorrow is day 1. And it's the last 'tomorrow' you get. After this, every day is today.";
+      document.getElementById("rule").textContent="Tonight: clear the junk out of your room and kitchen. Plan tomorrow's meals.";
+    }else{
+      document.getElementById("quote").textContent=QUOTES[(day-1)%QUOTES.length];
+      var rules=cut?RULES_CUT:RULES_BUILD;
+      document.getElementById("rule").textContent="Rule of the day: "+rules[(day-1)%rules.length];
+    }
     document.getElementById("codeTitle").textContent=cut?"The Cut Code":"The Build Code";
     var c=cut?CODE_CUT:CODE_BUILD,ul=document.getElementById("code");ul.innerHTML="";
     c.forEach(function(r,j){var li=document.createElement("li");li.innerHTML="<em>"+String(j+1).padStart(2,"0")+"</em><div><strong></strong></div>";li.querySelector("strong").textContent=r[0];li.querySelector("div").appendChild(document.createTextNode(r[1]));ul.appendChild(li)});
-    drawHero(day/120);
+    drawHero(day/TOTAL);
   }
 
-  document.getElementById("saveStart").addEventListener("click",function(){if(parseD(si.value)){start=si.value;sset("li120_start",start);render()}});
+  document.getElementById("saveStart").addEventListener("click",function(){if(parseD(si.value)){start=si.value;sset("li_start",start);render()}});
   var sosI=Math.floor(Math.random()*SOS.length);
   document.getElementById("sos").addEventListener("click",function(){sosI=(sosI+1)%SOS.length;document.getElementById("sosLine").textContent=SOS[sosI];document.getElementById("sosOut").hidden=false});
 
