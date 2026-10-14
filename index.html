@@ -1,0 +1,325 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lock In 120</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lock In">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --night:#0a0c11; --slab:#131720; --steel:#2a3140; --bone:#efe8d8; --muted:#8b91a0;
+  --amber:#ffae2b; --ice:#9fd3ff;
+  --f-display:"Big Shoulders Display","Impact","Arial Narrow",sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--night);color:var(--bone);font-family:var(--f-body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:calc(20px + env(safe-area-inset-top,0px)) calc(48px + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+h1,h2{font-family:var(--f-display);margin:0;text-wrap:balance;line-height:.92}
+h1{font-size:clamp(64px,22vw,112px);font-weight:900;letter-spacing:-.01em}
+h1 .of{color:var(--muted);font-size:.38em;font-weight:600;letter-spacing:.02em;margin-left:6px}
+h2{font-size:30px;font-weight:800;text-transform:uppercase;letter-spacing:.02em}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.phase{font-family:var(--f-display);font-weight:800;font-size:26px;text-transform:uppercase;color:var(--amber);letter-spacing:.04em}
+.mode{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+canvas#hero{width:100%;height:280px;display:block;border-radius:6px;background:var(--slab)}
+.ticks{display:grid;grid-template-columns:repeat(20,1fr);gap:4px}
+.tick{aspect-ratio:1/1.6;background:var(--steel);border-radius:2px;max-width:100%}
+.tick.done.cut{background:var(--amber)}
+.tick.done.build{background:var(--ice)}
+.tick.today{outline:2px solid var(--bone);outline-offset:1px;animation:pulse 1.6s ease-in-out infinite}
+.tick.split{box-shadow:inset -3px 0 0 var(--night)}
+@keyframes pulse{50%{outline-color:transparent}}
+.legend{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:11px;color:var(--muted);margin-top:8px}
+.bar{height:10px;background:var(--steel);border-radius:5px;overflow:hidden;margin-top:14px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--amber),var(--ice));width:0;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--slab);border-radius:6px;padding:14px 12px;min-width:0}
+.stat b{display:block;font-family:var(--f-display);font-size:34px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.stat span{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.orders{border-left:3px solid var(--amber);padding:4px 0 4px 16px}
+.orders p{margin:6px 0 0;font-size:22px;font-weight:600;line-height:1.3;text-wrap:balance}
+.orders small{display:block;margin-top:10px;color:var(--muted);font-size:14px}
+.code{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:2px}
+.code li{display:grid;grid-template-columns:34px 1fr;gap:10px;padding:12px 0;border-bottom:1px solid var(--steel)}
+.code li em{font-style:normal;font-family:var(--f-mono);color:var(--amber);font-size:13px;padding-top:2px}
+.why li{grid-template-columns:52px 1fr}
+.code li strong{display:block;font-weight:600}
+.code li div{min-width:0;color:var(--muted);font-size:14.5px}
+.code li div strong{color:var(--bone);font-size:16px}
+button,.btn{font:inherit;cursor:pointer;border:0;border-radius:6px}
+button:focus-visible,.btn:focus-within,input:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
+.sos{width:100%;padding:22px 16px;background:var(--amber);color:var(--night);font-family:var(--f-display);font-weight:900;font-size:30px;text-transform:uppercase;letter-spacing:.04em}
+.sos:active{transform:scale(.98)}
+.sosout{margin-top:14px;background:var(--slab);border-radius:6px;padding:18px}
+.sosout p{margin:0;font-size:19px;font-weight:600}
+.sosout ol{margin:12px 0 0;padding-left:20px;color:var(--muted)}
+.board{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:14px}
+.ph{position:relative;aspect-ratio:3/4;max-width:100%;border-radius:6px;overflow:hidden;background:var(--slab)}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph button{position:absolute;top:6px;right:6px;background:rgba(10,12,17,.75);color:var(--bone);width:30px;height:30px;font-size:16px}
+.empty{border:1.5px dashed var(--steel);display:grid;place-items:center;text-align:center;color:var(--muted);font-size:13px;padding:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;background:var(--slab);color:var(--bone);border:1px solid var(--steel);font-weight:600;margin-top:12px;position:relative}
+.btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.note{font-size:13px;color:var(--muted);margin-top:8px}
+.set{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.set input{font:inherit;background:var(--slab);color:var(--bone);border:1px solid var(--steel);border-radius:6px;padding:10px 12px}
+.set button{padding:11px 14px;background:var(--steel);color:var(--bone)}
+footer{font-family:var(--f-mono);font-size:11px;color:var(--muted);text-align:center;letter-spacing:.1em}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){.tick.today{animation:none}.bar i{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow" id="dateline">Operation 120 · Adam</div>
+    <div class="top">
+      <h1><span id="dayNum">1</span><span class="of">/ 120</span></h1>
+      <div style="text-align:right">
+        <div class="phase" id="phaseName">Ignition</div>
+        <div class="mode" id="phaseMode">Phase 1 · Cut</div>
+      </div>
+    </div>
+  </header>
+
+  <canvas id="hero" aria-label="Rooftop silhouette that gets leaner as the days pass"></canvas>
+
+  <section>
+    <div class="ticks" id="ticks"></div>
+    <div class="legend"><span>Day 1 · 80 kg</span><span>60 · 70 kg</span><span>120 · Built</span></div>
+    <div class="bar"><i id="bar"></i></div>
+  </section>
+
+  <section class="stats">
+    <div class="stat"><b id="sTarget">80.0</b><span>Target kg today</span></div>
+    <div class="stat"><b id="sPhaseLeft">60</b><span>Days left in cut</span></div>
+    <div class="stat"><b id="sPct">0%</b><span>Mission done</span></div>
+  </section>
+
+  <section class="orders">
+    <div class="eyebrow">Today's orders</div>
+    <p id="quote"></p>
+    <small id="rule"></small>
+  </section>
+
+  <section>
+    <h2>My Why</h2>
+    <ul class="code why">
+      <li><em>2 YRS</em><div><strong>Two years of "tomorrow"</strong>Two years in the same spot, saying I'll start tomorrow. Tomorrow never shows up by itself. Today is the only day I control, so today is the day.</div></li>
+      <li><em>5 MIN</em><div><strong>The high doesn't last</strong>Breaking the diet feels good for a few minutes. Then it's gone, and I'm still in the same body with the same regret. The body I'm building stays.</div></li>
+      <li><em>THEM</em><div><strong>What my friends will see</strong>They'll notice either way. The guy who keeps restarting, or the guy who showed up 120 days straight. I decide which one they see.</div></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2 id="codeTitle">The Cut Code</h2>
+    <ul class="code" id="code"></ul>
+  </section>
+
+  <section>
+    <button class="sos" id="sos" type="button">Craving? Hit this</button>
+    <div class="sosout" id="sosOut" hidden>
+      <p id="sosLine"></p>
+      <ol>
+        <li>Drink a full glass of water now.</li>
+        <li>Wait 10 minutes. Walk, shower or brush your teeth.</li>
+        <li>Still hungry? Eat protein, not snacks.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <h2>Vision Board</h2>
+    <p class="note">Add the photos that fire you up. They stay on this phone only.</p>
+    <div class="board" id="board"></div>
+    <label class="btn" for="upload">+ Add photos<input id="upload" type="file" accept="image/*" multiple></label>
+    <p class="note" id="boardMsg"></p>
+  </section>
+
+  <section>
+    <div class="eyebrow">Start date</div>
+    <div class="set">
+      <input type="date" id="startDate">
+      <button type="button" id="saveStart">Save</button>
+    </div>
+    <p class="note">Day count updates by itself every morning. Nothing to log.</p>
+  </section>
+
+  <footer>No days off · No excuses · Day by day</footer>
+</div>
+
+<script>
+(function(){
+  var DEFAULT_START="2026-10-14";
+  function sget(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function sset(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
+
+  var PHASES=[
+    {from:1,to:14,name:"Ignition",n:1,mode:"Cut"},
+    {from:15,to:45,name:"The Grind",n:2,mode:"Cut"},
+    {from:46,to:60,name:"Final Descent",n:3,mode:"Cut"},
+    {from:61,to:90,name:"Build",n:4,mode:"Recomp"},
+    {from:91,to:120,name:"The Reveal",n:5,mode:"Recomp"}
+  ];
+  var QUOTES=[
+    "Two years of 'I'll start tomorrow.' This is the tomorrow you kept promising.",
+    "That snack buys you five minutes of happy. Then you're back in the same body.",
+    "Your friends will see the change before you say a word. Give them something to see.",
+    "You've restarted enough times. There is no new day 1 after this one.",
+    "The good feeling from breaking is short. The regret sticks around all night.",
+    "They'll notice either way: the guy who quits, or the guy who finished.",
+    "Two years standing still is long enough. Move today.",
+    "Five minutes of taste isn't worth another year in the same place.",
+    "Discipline shows on the body. Let them see it on yours.",
+    "Tomorrow-you has been waiting two years. Stop making him wait.",
+    "Every time you cave, the satisfaction is gone before the plate is cold.",
+    "Be the friend they talk about for showing up, not for starting over.",
+    "Same place, same excuse, same body. Not this time.",
+    "Short pleasure, long price. You already know how that story ends.",
+    "In 120 days nobody asks if you're disciplined. They can see it."
+  ];
+  var RULES_CUT=[
+    "Hit your protein before you think about anything else.",
+    "Zero liquid calories today. Water, black coffee, tea.",
+    "Plan tonight's dinner before lunch ends.",
+    "8,000+ steps. Walk off the hunger.",
+    "No eating after your last planned meal.",
+    "Sleep 7–8 hours. Bad sleep makes cravings louder.",
+    "Fill half your plate with vegetables."
+  ];
+  var RULES_BUILD=[
+    "Eat near maintenance. Fuel the work, don't overfeed it.",
+    "Protein at every meal, no exceptions.",
+    "Push one lift heavier than last week.",
+    "Shoulders and back first. That's where the V comes from.",
+    "Carbs around training. Keep the rest clean.",
+    "Sleep is when the muscle gets built. Protect it.",
+    "Keep the steps up. Stay lean while you grow."
+  ];
+  var CODE_CUT=[
+    ["Protein high","About 150–160 g a day. It keeps muscle and kills hunger."],
+    ["Steady deficit","Eat in a real deficit every day. No 'cheat days'."],
+    ["No liquid calories","Juice, soda and sweet coffee are the first to go."],
+    ["Walk daily","Steps burn fat without wrecking recovery."],
+    ["Keep lifting","Lift 3–4x a week so the weight lost is fat, not muscle."],
+    ["Sleep 7–8 h","Short sleep raises cravings the next day."]
+  ];
+  var CODE_BUILD=[
+    ["Near maintenance","Eat around maintenance. Slight surplus on hard training days."],
+    ["Protein high","Keep 150–160 g a day. The build runs on it."],
+    ["Train the V","Overhead press, pull-ups, rows, lateral raises. Every week."],
+    ["Progressive overload","Add a rep or a little weight each session."],
+    ["Stay athletic","Keep cardio and steps so you stay lean, not bulky."],
+    ["Sleep 7–8 h","Growth happens in recovery."]
+  ];
+  var SOS=[
+    "This is exactly how the last two years went. One 'just this once' at a time.",
+    "Five minutes of satisfaction. Then you're right back where you've been for two years.",
+    "Your friends are going to see the result of this exact moment.",
+    "Say 'tomorrow' now and you're back to day 1. Again.",
+    "The craving fades in ten minutes. The guy who gave in stays the same.",
+    "Do you want to be satisfied for five minutes, or for the rest of the year?"
+  ];
+
+  function parseD(s){var p=(s||"").split("-");if(p.length!==3)return null;var d=new Date(+p[0],+p[1]-1,+p[2]);return isNaN(d)?null:d}
+  var start=sget("li120_start")||DEFAULT_START;
+  var si=document.getElementById("startDate");si.value=start;
+
+  function render(){
+    var sd=parseD(start)||parseD(DEFAULT_START);
+    var now=new Date();var t=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    var raw=Math.round((t-sd)/86400000)+1;
+    var day=Math.max(1,Math.min(120,raw));
+    var ph=PHASES.filter(function(p){return day>=p.from&&day<=p.to})[0];
+    var cut=day<=60;
+    document.getElementById("dayNum").textContent=raw<1?"0":day;
+    document.getElementById("phaseName").textContent=raw<1?"Standby":(raw>120?"Complete":ph.name);
+    document.getElementById("phaseMode").textContent="Phase "+ph.n+" · "+ph.mode;
+    document.getElementById("dateline").textContent="Operation 120 · Adam · "+t.toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short"});
+    var tgt=cut?(80-10*(day-1)/59):70;
+    document.getElementById("sTarget").textContent=tgt.toFixed(1);
+    document.getElementById("sPhaseLeft").textContent=cut?(60-day):(120-day);
+    document.querySelector("#sPhaseLeft + span").textContent=cut?"Days left in cut":"Days to reveal";
+    var pct=Math.round(day/120*100);
+    document.getElementById("sPct").textContent=pct+"%";
+    setTimeout(function(){document.getElementById("bar").style.width=pct+"%"},60);
+
+    var tk=document.getElementById("ticks");tk.innerHTML="";
+    for(var i=1;i<=120;i++){var e=document.createElement("div");
+      e.className="tick "+(i<=60?"cut":"build")+(i<day||(i===day&&raw>120)?" done":"")+(i===day&&raw>=1&&raw<=120?" today":"")+(i===60?" split":"");
+      tk.appendChild(e)}
+
+    document.getElementById("quote").textContent=QUOTES[(day-1)%QUOTES.length];
+    var rules=cut?RULES_CUT:RULES_BUILD;
+    document.getElementById("rule").textContent="Rule of the day: "+rules[(day-1)%rules.length];
+    document.getElementById("codeTitle").textContent=cut?"The Cut Code":"The Build Code";
+    var c=cut?CODE_CUT:CODE_BUILD,ul=document.getElementById("code");ul.innerHTML="";
+    c.forEach(function(r,j){var li=document.createElement("li");li.innerHTML="<em>"+String(j+1).padStart(2,"0")+"</em><div><strong></strong></div>";li.querySelector("strong").textContent=r[0];li.querySelector("div").appendChild(document.createTextNode(r[1]));ul.appendChild(li)});
+    drawHero(day/120);
+  }
+
+  document.getElementById("saveStart").addEventListener("click",function(){if(parseD(si.value)){start=si.value;sset("li120_start",start);render()}});
+  var sosI=Math.floor(Math.random()*SOS.length);
+  document.getElementById("sos").addEventListener("click",function(){sosI=(sosI+1)%SOS.length;document.getElementById("sosLine").textContent=SOS[sosI];document.getElementById("sosOut").hidden=false});
+
+  var cv=document.getElementById("hero");
+  function rnd(seed){return function(){seed=(seed*16807)%2147483647;return (seed-1)/2147483646}}
+  function drawHero(p){
+    var dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;if(!W)return;
+    cv.width=W*dpr;cv.height=H*dpr;var x=cv.getContext("2d");x.setTransform(dpr,0,0,dpr,0,0);
+    var g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,"#06070b");g.addColorStop(.7,"#1a1d2a");g.addColorStop(1,"#3a2a18");
+    x.fillStyle=g;x.fillRect(0,0,W,H);
+    var r=rnd(7);
+    for(var s=0;s<40;s++){x.fillStyle="rgba(239,232,216,"+(r()*.6)+")";x.fillRect(r()*W,r()*H*.5,1.2,1.2)}
+    x.fillStyle="#efe8d8";x.beginPath();x.arc(W*.78,H*.24,26,0,7);x.fill();
+    x.fillStyle="rgba(239,232,216,.08)";x.beginPath();x.arc(W*.78,H*.24,46,0,7);x.fill();
+    var bx=0;r=rnd(42);
+    while(bx<W){var bw=24+r()*46,bh=60+r()*130;x.fillStyle="#0e1119";x.fillRect(bx,H-bh,bw,bh);
+      for(var wy=H-bh+8;wy<H-8;wy+=10)for(var wx=bx+5;wx<bx+bw-5;wx+=8)if(r()<.18){x.fillStyle=r()<.8?"rgba(255,174,43,.75)":"rgba(159,211,255,.6)";x.fillRect(wx,wy,3,4)}
+      bx+=bw+2}
+    var ly=H-34;x.fillStyle="#05060a";x.fillRect(0,ly,W,34);
+    x.fillStyle="#ffae2b";x.fillRect(0,ly,W,1.5);
+    var cx=W*.36,sc=H/280,head=13*sc,sh=(44+12*p)*sc,wa=(34-9*p)*sc,hip=(30-3*p)*sc,top=ly-170*sc;
+    x.save();x.shadowColor="rgba(255,174,43,.55)";x.shadowBlur=14;x.fillStyle="#020306";
+    x.beginPath();x.arc(cx,top+head,head,0,7);x.fill();
+    var ny=top+head*2+2*sc,sy=ny+12*sc,wy2=sy+62*sc,hy=wy2+16*sc,fy=ly;
+    x.beginPath();
+    x.moveTo(cx-6*sc,ny);x.lineTo(cx+6*sc,ny);
+    x.quadraticCurveTo(cx+sh*.7,ny+4*sc,cx+sh,sy);
+    x.quadraticCurveTo(cx+sh+8*sc,sy+18*sc,cx+sh+4*sc,sy+40*sc);
+    x.lineTo(cx+sh-2*sc,wy2+10*sc);x.lineTo(cx+sh-10*sc,wy2+12*sc);
+    x.quadraticCurveTo(cx+wa+6*sc,sy+30*sc,cx+wa,wy2);
+    x.lineTo(cx+hip,hy);x.lineTo(cx+hip-4*sc,fy);x.lineTo(cx+5*sc,fy);x.lineTo(cx+3*sc,hy+24*sc);
+    x.lineTo(cx-3*sc,hy+24*sc);x.lineTo(cx-5*sc,fy);x.lineTo(cx-hip+4*sc,fy);x.lineTo(cx-hip,hy);
+    x.lineTo(cx-wa,wy2);x.quadraticCurveTo(cx-wa-6*sc,sy+30*sc,cx-sh+10*sc,wy2+12*sc);
+    x.lineTo(cx-sh+2*sc,wy2+10*sc);x.lineTo(cx-sh-4*sc,sy+40*sc);
+    x.quadraticCurveTo(cx-sh-8*sc,sy+18*sc,cx-sh,sy);
+    x.quadraticCurveTo(cx-sh*.7,ny+4*sc,cx-6*sc,ny);x.closePath();x.fill();x.restore();
+    x.font="600 11px 'IBM Plex Mono',monospace";x.fillStyle="rgba(239,232,216,.7)";
+    x.fillText("V-TAPER  "+Math.round(sh/wa*100)/100+" : 1",W-130,H-14);
+  }
+  window.addEventListener("resize",function(){render()});
+
+  var KEY="li120_board",board=[];
+  try{board=JSON.parse(sget(KEY)||"[]")||[]}catch(e){board=[]}
+  var msg=document.getElementById("boardMsg");
+  function drawBoard(){var b=document.getElementById("board");b.innerHTML="";
+    board.forEach(function(src,i){var d=document.createElement("div");d.className="ph";var im=new Image();im.src=src;im.alt="Inspiration photo "+(i+1);
+      var x=document.createElement("button");x.type="button";x.textContent="×";x.setAttribute("aria-label","Remove photo");
+      x.onclick=function(){board.splice(i,1);sset(KEY,JSON.stringify(board));drawBoard()};d.appendChild(im);d.appendChild(x);b.appendChild(d)});
+    var need=board.length<2?2-board.length:(board.length%2);
+    for(var k=0;k<need;k++){var e=document.createElement("div");e.className="ph empty";e.textContent="Your goal physique goes here";b.appendChild(e)}}
+  document.getElementById("upload").addEventListener("change",function(ev){
+    Array.prototype.forEach.call(ev.target.files,function(f){var rd=new FileReader();rd.onload=function(){var im=new Image();im.onload=function(){
+      var m=720,s=Math.min(1,m/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*s;c.height=im.height*s;
+      c.getContext("2d").drawImage(im,0,0,c.width,c.height);board.push(c.toDataURL("image/jpeg",.72));
+      if(!sset(KEY,JSON.stringify(board))){board.pop();msg.textContent="Storage is full. Remove a photo to add another."}else msg.textContent="";
+      drawBoard()};im.src=rd.result};rd.readAsDataURL(f)});ev.target.value=""});
+  drawBoard();render();
+})();
+</script>
